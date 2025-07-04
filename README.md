@@ -11,7 +11,7 @@ This project builds a smart AI-powered chatbot that turns raw, messy complaint d
 
 ⚡ Why It Matters
 
-- Cut analysis time from days to minutes.
+- Cut analysis time from days to minutes.nn
 
 - Empower non-tech teams to get real answers without waiting for data scientists.
 
