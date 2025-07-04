@@ -1,67 +1,70 @@
-import os
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+import polars as pl
 from sentence_transformers import SentenceTransformer
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 import faiss
-import numpy as np
+import os
 import pickle
-import pandas as pd
-
-# Load your data
-df = pd.read_csv('../data/raw/complaints.csv')
-
-# Initialize text splitter
-chunk_size = 500
-chunk_overlap = 50
-text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
-
-# Initialize embedding model
-model_name = "sentence-transformers/all-MiniLM-L6-v2"
-embedder = SentenceTransformer(model_name)
-
-# Prepare containers for embeddings and metadata
-embeddings = []
-metadata = []
-
-print("Starting chunking, embedding, and indexing...")
-df.columns = df.columns.str.strip().str.lower()
+from tqdm import tqdm
 
 
-for idx, row in df.iterrows():
+df = pl.read_csv("../data/filtered/filtered_complaints.csv")
+print("Loaded", df.shape[0], "rows.")
 
-    complaint_id = row['complaint_id']
-    product = row['product']
-    text = row['cleaned_text']  # Use cleaned text column
+# ===  Set up chunking ===
+text_splitter = RecursiveCharacterTextSplitter(
+    chunk_size=1000,          
+    chunk_overlap=100,
+    separators=["\n\n", "\n", ".", " "]
+)
+#model = SentenceTransformer("sentence-transformers/paraphrase-MiniLM-L3-v2")
+model = SentenceTransformer("paraphrase-MiniLM-L3-v2")
 
-    # Split text into chunks
-    chunks = text_splitter.split_text(text)
-    
-    # Embed each chunk
-    chunk_embeddings = embedder.encode(chunks)
-    
-    for i, chunk_emb in enumerate(chunk_embeddings):
-        embeddings.append(chunk_emb)
-        metadata.append({
-            'complaint_id': complaint_id,
-            'product': product,
-            'chunk_index': i,
-            'text_chunk': chunks[i]
+
+
+# ===  Chunk, filter, and collect metadata ===
+texts = []
+metadatas = []
+
+for row in df.iter_rows(named=True):
+    complaint_id = row["complaint_id"]
+    product = row["product"]
+    narrative = row["narrative"]
+
+    if len(narrative) < 100:
+        continue  
+
+    chunks = text_splitter.split_text(narrative)
+    for chunk in chunks:
+        texts.append(chunk)
+        metadatas.append({
+            "complaint_id": complaint_id,
+            "product": product,
+            "text": chunk
         })
 
-print(f"Total chunks processed: {len(embeddings)}")
+print("Total chunks:", len(texts))
 
-# Convert embeddings list to numpy array
-embedding_dim = len(embeddings[0])
-embedding_matrix = np.array(embeddings).astype('float32')
+# ===  Generate embeddings in batches ===
+BATCH_SIZE = 512
+all_embeddings = []
 
-# Build FAISS index
-index = faiss.IndexFlatL2(embedding_dim)
-index.add(embedding_matrix)
+for i in tqdm(range(0, len(texts), BATCH_SIZE), desc="Encoding Batches"):
+    batch_texts = texts[i:i + BATCH_SIZE]
+    batch_embeddings = model.encode(batch_texts, show_progress_bar=False)
+    all_embeddings.extend(batch_embeddings)
 
-# Save FAISS index and metadata
-os.makedirs('vector_store', exist_ok=True)
-faiss.write_index(index, 'vector_store/faiss_index.bin')
+embeddings = all_embeddings
 
-with open('vector_store/metadata.pkl', 'wb') as f:
-    pickle.dump(metadata, f)
+# ===  Create FAISS index ===
+dim = embeddings[0].shape[0]
+index = faiss.IndexFlatL2(dim)
+index.add(embeddings)
 
-print("Vector store saved in 'vector_store/' directory.")
+# ===  Save index and metadata ===
+os.makedirs("vector_store", exist_ok=True)
+faiss.write_index(index, "vector_store/faiss_index.idx")
+
+with open("vector_store/metadata.pkl", "wb") as f:
+    pickle.dump(metadatas, f)
+
+print("Index and metadata saved successfully.")
