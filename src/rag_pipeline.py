@@ -19,7 +19,6 @@ print("Vector store loaded.")
 
 # === Load model for embedding and generation ===
 embed_model = SentenceTransformer("paraphrase-MiniLM-L3-v2")
-#gen_model = pipeline("text-generation", model="tiiuae/falcon-7b-instruct", max_new_tokens=256)
 gen_model = pipeline("text-generation", model="gpt2", max_new_tokens=256)
 
 
@@ -43,19 +42,13 @@ def retrieve_top_k(question, k=2):
     top_chunks = [metadatas[i]["text"] for i in indices[0]]
     return top_chunks
 
-# # === Generator Function ===
-# def generate_answer(question, context_chunks):
-#     context = "\n\n".join(context_chunks)
-#     prompt = PROMPT_TEMPLATE.format(context=context, question=question)
-#     response = gen_model(prompt)[0]["generated_text"]
-#     return response.split("Answer:")[-1].strip()
 
 def generate_answer(question, context_chunks):
     context = "\n\n".join(context_chunks)
     prompt = PROMPT_TEMPLATE.format(context=context, question=question)
     
-    # Truncate prompt if too long
-    max_tokens = 900  # Stay under 1024 with room for generation
+   
+    max_tokens = 900  
     prompt = prompt[:max_tokens]
 
     response = gen_model(prompt)[0]["generated_text"]
