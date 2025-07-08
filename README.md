@@ -9,62 +9,99 @@ CrediTrust Financial is rapidly growing across East Africa, offering Credit Card
 
 This project builds a smart AI-powered chatbot that turns raw, messy complaint data into quick, clear insights. Product Managers, Support, and Compliance teams can instantly spot trends, solve problems faster, and stay ahead of customer issues — no more digging through mountains of text!
 
-⚡ Why It Matters
+##  Features
 
-- Cut analysis time from days to minutes.
+- 🔍 Retrieves top relevant complaint excerpts using FAISS
+- 💬 Generates answers using a powerful language model
+- 📂 Shows source texts used to build trust
+- 🧼 Clear interface built with Streamlit
+- 🧠 Evaluated for quality with a curated set of real questions
 
-- Empower non-tech teams to get real answers without waiting for data scientists.
-
-- Uncover hidden complaint trends across multiple product lines — Credit Cards, Loans, BNPL, Savings, and Transfers.
-
-- Transform reactive firefighting into proactive customer care.
+---
 
 💻 How It Works 
 
-Speedy Data Crunching with Polars
+**Speedy Data Crunching with Polars**
 Fast and lightweight processing of massive complaint datasets. No heavy memory hogging here!
 
-Smart Text Chunking
+**Smart Text Chunking**
 Splits long complaint stories into bite-sized, meaningful pieces — ready for embedding.
 
-Powerful Sentence Embeddings
+**Powerful Sentence Embeddings**
 Uses cutting-edge Sentence Transformers to convert text into numerical vectors that capture meaning.
 
-Blazing-Fast Search with FAISS
+**Blazing-Fast Search with FAISS**
 Finds the most relevant complaint snippets lightning-fast through vector similarity search.
 
-Answer Generation with RAG
+**Answer Generation with RAG**
 Feeds retrieved info into a language model for concise, grounded, human-like answers.
+
 
 **📝 Task 1: Data Exploration & Cleaning**
 
-Load and explore the complaint dataset.
+* Load and explore the complaint dataset.
 
-Analyze complaint distribution and narrative lengths.
+* Analyze complaint distribution and narrative lengths.
 
-Filter for key products and remove empty narratives.
+* Filter for key products and remove empty narratives.
 
-Clean text by lowercasing and removing boilerplate.
+* Clean text by lowercasing and removing boilerplate.
 
-Save the cleaned dataset.
+* Save the cleaned dataset.
+
 
 **🚀 Task 2: Chunking, Embedding & Indexing**
 
-Split narratives into manageable chunks.
+* Split narratives into manageable chunks.
 
-Embed chunks using a sentence transformer model.
+* Embed chunks using a sentence transformer model.
 
-Build a FAISS index for fast similarity search.
+* Build a FAISS index for fast similarity search.
 
-Save the index and metadata for later use.
+* Save the index and metadata for later use.
 
-⚠️ Pro Tips for Turbocharged Performance
-Running on CPU? It’s a marathon, not a sprint — consider smaller models or GPU acceleration!
 
-Want to slice chunk count? Try bigger chunk_size values in the text splitter.
+## Project structure
+```bash
+creditrust-rag-chatbot/
+├── notebooks
+| ├── 01_eda_preprocessing.ipynb
+├── src/
+│ ├── embedding_indexing.py # Builds FAISS index 
+│ ├── rag_pipeline.py # RAG logic (retriever + generator)
+| ├── app.py # Streamlit web app
+├── Vector_store 
+└── .gitignore
+└── requirements.txt
+└── README.md
+```
 
-Use Google Colab with GPU to cut embedding time from hours to minutes.
+---
 
+## ⚙️ Setup Instructions
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/your-username/creditrust-rag-assistant.git
+cd creditrust-rag-assistant
+```
+### 2. Install Requirements
+
+```bash
+pip install streamlit sentence-transformers faiss-cpu transformers numpy polars tqdm
+```
+### 3. Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Run The App
+
+```bash
+streamlit run app.py
+```
 
 
 
